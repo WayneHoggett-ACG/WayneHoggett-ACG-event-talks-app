@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tech Talk Schedule</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #search-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #search {
+      width: 300px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #schedule-container {
+      margin: 0 auto;
+      width: 80%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .talk {
+      cursor: pointer;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tech Talk Schedule</h1>
+
+  <div id="search-container">
+    <input type="text" id="search" placeholder="Search by category...">
+  </div>
+
+  <div id="schedule-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Title</th>
+          <th>Speakers</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody id="schedule-body">
+      </tbody>
+    </table>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modal-title"></h2>
+      <p id="modal-speakers"></p>
+      <p id="modal-category"></p>
+      <p id="modal-description"></p>
+    </div>
+  </div>
+
+  <script>
+    const talks = [
+      {
+        "title": "The Future of JavaScript",
+        "speakers": ["John Doe"],
+        "category": ["JavaScript", "Web Development"],
+        "duration": 60,
+        "description": "An in-depth look at the upcoming features of JavaScript and how they will shape the future of web development."
+      },
+      {
+        "title": "Building Scalable APIs with Node.js",
+        "speakers": ["Jane Smith"],
+        "category": ["Node.js", "APIs", "Backend"],
+        "duration": 60,
+        "description": "Learn how to design and build APIs that can handle millions of requests per second."
+      },
+      {
+        "title": "CSS Grid and Flexbox: A Deep Dive",
+        "speakers": ["Peter Jones", "Mary Johnson"],
+        "category": ["CSS", "Frontend"],
+        "duration": 60,
+        "description": "A comprehensive guide to using CSS Grid and Flexbox to create complex and responsive layouts."
+      },
+      {
+        "title": "Introduction to Machine Learning",
+        "speakers": ["David Williams"],
+        "category": ["Machine Learning", "AI"],
+        "duration": 60,
+        "description": "A beginner-friendly introduction to the world of machine learning and artificial intelligence."
+      },
+      {
+        "title": "Securing Your Web Applications",
+        "speakers": ["Susan Brown"],
+        "category": ["Security", "Web Development"],
+        "duration": 60,
+        "description": "Learn about the most common web application vulnerabilities and how to protect your applications from them."
+      },
+      {
+        "title": "The Power of Serverless",
+        "speakers": ["Michael Miller"],
+        "category": ["Serverless", "Cloud Computing"],
+        "duration": 60,
+        "description": "Discover the benefits of serverless computing and how it can help you build and deploy applications faster and more efficiently."
+      }
+    ];
+
+    renderSchedule(talks);
+
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('keyup', () => {
+      const searchTerm = searchInput.value.toLowerCase();
+      const filteredTalks = talks.filter(talk => {
+        return talk.category.some(category => category.toLowerCase().includes(searchTerm));
+      });
+      renderSchedule(filteredTalks);
+    });
+
+    function renderSchedule(talksToRender) {
+      const scheduleBody = document.getElementById('schedule-body');
+      scheduleBody.innerHTML = '';
+
+      let startTime = new Date();
+      startTime.setHours(10, 0, 0, 0);
+
+      talksToRender.forEach((talk, index) => {
+        const row = document.createElement('tr');
+        row.classList.add('talk');
+        row.addEventListener('click', () => openModal(talk));
+
+        const timeCell = document.createElement('td');
+        const endTime = new Date(startTime.getTime() + talk.duration * 60000);
+        timeCell.textContent = `${formatTime(startTime)} - ${formatTime(endTime)}`;
+        row.appendChild(timeCell);
+
+        const titleCell = document.createElement('td');
+        titleCell.textContent = talk.title;
+        row.appendChild(titleCell);
+
+        const speakersCell = document.createElement('td');
+        speakersCell.textContent = talk.speakers.join(', ');
+        row.appendChild(speakersCell);
+
+        const categoryCell = document.createElement('td');
+        categoryCell.textContent = talk.category.join(', ');
+        row.appendChild(categoryCell);
+
+        scheduleBody.appendChild(row);
+
+        startTime.setTime(endTime.getTime() + 10 * 60000); // 10 minute break
+
+        if (index === 2) { // Lunch break after the 3rd talk
+            const lunchRow = document.createElement('tr');
+            const lunchTimeCell = document.createElement('td');
+            const lunchEndTime = new Date(startTime.getTime() + 60 * 60000);
+            lunchTimeCell.textContent = `${formatTime(startTime)} - ${formatTime(lunchEndTime)}`;
+            lunchRow.appendChild(lunchTimeCell);
+            const lunchCell = document.createElement('td');
+            lunchCell.colSpan = 3;
+            lunchCell.textContent = "Lunch Break";
+            lunchRow.appendChild(lunchCell);
+            scheduleBody.appendChild(lunchRow);
+            startTime.setTime(lunchEndTime.getTime());
+        }
+      });
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSpeakers = document.getElementById('modal-speakers');
+    const modalCategory = document.getElementById('modal-category');
+    const modalDescription = document.getElementById('modal-description');
+    const closeBtn = document.getElementsByClassName('close')[0];
+
+    function openModal(talk) {
+      modalTitle.textContent = talk.title;
+      modalSpeakers.textContent = `Speakers: ${talk.speakers.join(', ')}`;
+      modalCategory.textContent = `Category: ${talk.category.join(', ')}`;
+      modalDescription.textContent = talk.description;
+      modal.style.display = 'block';
+    }
+
+    closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
